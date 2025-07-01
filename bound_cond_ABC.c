@@ -18,13 +18,13 @@ int main()
     /* do time stepping */
     for (qTime = 0; qTime < maxTime; qTime++) {
 
-        hy[SIZE-1] = hy[SIZE-2];
+        hy[SIZE-1] = hy[SIZE-2];    //magnetic field travelling to the right is not reflected back as is the case with the PMC boundary on right usually. But here we use an absorbing boundary condition.
         /* update magnetic field */
         for (mm = 0; mm < SIZE - 1; mm++) {
             hy[mm] = hy[mm] + (ez[mm + 1] - ez[mm]) / imp0;
         }
 
-        ez[0] = ez[1];
+        ez[0] = ez[1];   //ensures that the electric field from right is transported to left since there is no new soure, it prevents reflection.
 
         /* update electric field */
         for (mm = 1; mm < SIZE; mm++) 
