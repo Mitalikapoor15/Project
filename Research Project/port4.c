@@ -5,6 +5,7 @@
 //ez_r_i ring section before the signal encounters the port
 //ez_r_f ring section after it has encountered the port.
 //same goes for the waveguide sections as well.
+//boundary conditions have been applied.
 
 #include <stdio.h>
 #include <math.h>
@@ -16,11 +17,11 @@
 
 int main()
 {
-    double p[SIZE] = {0.}; //ports
     double ez[NUM_PORTS][SIZE] = {0.}; // ports 0 and 1 for guide; 2 and 3 for ring
     double hy[NUM_PORTS][SIZE] = {0.};
     // double ez_g_i[SIZE_i] = {0.}, hy_g_i[SIZE_i] = {0.}, ez_g_f[SIZE] = {0.}, hy_g_f[SIZE] = {0.}; //i and f stand for initial and final
     // double ez_r_i[SIZE_i] = {0.}, hy_r_i[SIZE_i] = {0.}, ez_r_f[SIZE] = {0.}, hy_r_f[SIZE] = {0.}, 
+    double p[SIZE] = {0.}; //ports
     double imp0 = 377.0; //divided by 2 in order to define the length of the 4 branches, the signal is injected at 50.
     int qTime, maxTime = 200, j;
     int t = 3; //arbitrary (will change later)
@@ -56,14 +57,15 @@ int main()
          /* do time stepping */
 
            //UPDATE equations for the waveguide written separately
-           //hy_r_i[SIZE_i - 1] = hy_r_i[SIZE_i-2];  //boundary conditions to be implemented later to avoid confusion.
+           
+           hy[0][SIZE - 1] = hy[0][SIZE-2];  //boundary conditions to be implemented later to avoid confusion.
 
             /* update magnetic field */
             for (j = 0; j < SIZE - 1; j++) {
                 hy[0][j] = hy[0][j] + (ez[0][j + 1] - ez[0][j]) / imp0;
             }
 
-            //ez_r_i[0] = ez_r_i[1];   //implementing boundary conditions [later]
+            ez[0][0] = ez[0][1];   //implementing boundary conditions [later]
 
             /* update electric field */
             for (j = 1; j < SIZE - 1; j++) 
@@ -94,12 +96,15 @@ int main()
             for (int i = 1; i < (NUM_PORTS - 1); i++) {  //excludes 3rd port for now
              
                 ez[i][0] = p[i];  //transferring signal across ports
+               
+                hy[0][SIZE - 1] = hy[0][SIZE-2]; //boundary condition
 
                 /* update magnetic field */
                 for (j = 0; j < (SIZE - 1); j++) {
                     hy[i][j] = hy[i][j] + (ez[i][j + 1] - ez[i][j]) / imp0;
                 }
-                //ez_r_i[0] = ez_r_i[1];   //implementing boundary conditions [later]
+              //implementing boundary condition
+                ez[i][0] = ez[i][1]; 
                 /* update electric field */
                 for (j = 1; j < (SIZE - 1); j++) 
                     ez[i][j] = ez[i][j] + (hy[i][j] - hy[i][j - 1]) * imp0;
