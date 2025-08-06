@@ -93,3 +93,29 @@ def plot_field_ring(ez_tab_tp):
     plt.title(f'{num_rings} Coupled Optical Rings with Half Arcs at Ends')
     plt.tight_layout()
     plt.show()
+
+
+
+def Couplings(N_rings):
+    seg_no = N_rings*2
+    s = np.zeros(seg_no,2)
+    s1 = np.zeros(N_rings,2) #forward transmission
+    s2 = np.zeros(N_rings,2) #backward propagation
+    for i in range (N_rings):
+       
+        s1[i][0] = (2*i + 1)  #odd indices belong to the s2 segments which are responsible for back propagation
+        if i>0:
+            s1[i][1] = (2*i) - 2 #because if it is 0, we will have -2 index which is not what we want.
+        
+        s2[i][0] = 2*i
+        if i<(N_rings-1):   
+            s2[i][1] = (2*i + 1) + 2
+        
+    for i in range(seg_no):
+        if i%2==0:
+            s[i][:] = s1[i][:]
+        else:
+            s[i][:] = s2[i][:]
+
+    return s
+    
