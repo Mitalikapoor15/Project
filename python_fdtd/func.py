@@ -96,11 +96,12 @@ def plot_field_ring(ez_tab_tp):
 
 
 
-def Couplings(N_rings):
+def Sources(N_rings):
     seg_no = N_rings*2
-    s = np.zeros(seg_no,2)
-    s1 = np.zeros(N_rings,2) #forward transmission
-    s2 = np.zeros(N_rings,2) #backward propagation
+    s = np.zeros((seg_no,2), dtype=int)
+    s1 = np.zeros((N_rings,2), dtype=int) #forward transmission
+    s2 = np.zeros((N_rings,2), dtype=int) #backward propagation
+    s1[0][1] = -1 
     for i in range (N_rings):
        
         s1[i][0] = (2*i + 1)  #odd indices belong to the s2 segments which are responsible for back propagation
@@ -111,11 +112,16 @@ def Couplings(N_rings):
         if i<(N_rings-1):   
             s2[i][1] = (2*i + 1) + 2
         
-    for i in range(seg_no):
-        if i%2==0:
-            s[i][:] = s1[i][:]
-        else:
-            s[i][:] = s2[i][:]
+    for i in range(N_rings):
+        s[2*i][:] = s1[i][:]
+        s[2*i + 1][:] = s2[i][:]
 
     return s
+
+def Couplings(N_rings, tau):
+    c = np.zeros((N_rings*2,2), dtype=complex)
+    t = tau
+    k = 1j* m.sqrt(1-t**2)
+    c[:][:] = (t,k)
+    return c
     
