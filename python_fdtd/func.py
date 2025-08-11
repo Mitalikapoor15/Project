@@ -20,8 +20,8 @@ def cosMod(qTime, maxTime):
     f0 = 300e12
     t0 = 4 * dt * maxTime / 50  # Center time
     tau = 2 * dt * maxTime / 50 # Width
-    source = A * np.cos(2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
-    source = A * np.exp( 1j* 2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
+    # source = A * np.cos(2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
+    source = A * np.cos( 1j* 2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
     return source
 
 def create_colored_arc(center, radius, values, angle_range, cmap='plasma'):
@@ -101,19 +101,21 @@ def Sources(N_rings):
     s = np.zeros((seg_no,2), dtype=int)
     s1 = np.zeros((N_rings,2), dtype=int) #forward transmission
     s2 = np.zeros((N_rings,2), dtype=int) #backward propagation
-    s1[0][1] = -1 
+    s1[0][1] = -1
+    s1[0][0] = -1
     for i in range (N_rings):
-       
-        s1[i][0] = (2*i + 1)  #odd indices belong to the s2 segments which are responsible for back propagation
-        if i>0:
-            s1[i][1] = (2*i) - 2 #because if it is 0, we will have -2 index which is not what we want.
+        if i > 0:
+            s1[i][0] = (2*i + 1)  #odd indices belong to the s2 segments which are responsible for back propagation
+            s1[i][1] = 2*i - 2 #because if it is 0, we will have -2 index which is not what we want.
         
-        s2[i][0] = 2*i
-        if i<(N_rings-1):   
-            s2[i][1] = (2*i + 1) + 2
+        s2[i][0] = 2*i  #for the transmission of odd segments  
+        s2[i][1] = 2*i  + 3
+        if i==(N_rings-1):
+            s2[i][1] =  2*i - 1
         
     for i in range(N_rings):
-        s[2*i][:] = s1[i][:]
+        s[2*i][0] = s1[i][0]
+        s[2*i][1] = s1[i][1]
         s[2*i + 1][:] = s2[i][:]
 
     return s

@@ -7,8 +7,9 @@ class Segment:
     def __init__(self, SIZE):
         self.ez = np.zeros([SIZE], dtype=complex)
         self.hy = np.zeros([SIZE], dtype=complex)
-        self.sx = 49
+        # self.sx = 49
         self.size = SIZE
+        self.ez[-1] = 1
         
     def hy_update(self):
         imp0 = 377
@@ -29,4 +30,5 @@ class Segment:
         
     def ez_sources(self, s,sx):   
         self.sx = sx
-        self.ez[self.sx] += s  
+        self.ez[self.sx] += s 
+        # print(self.ez[self.sx])
