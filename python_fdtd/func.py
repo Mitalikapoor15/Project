@@ -29,11 +29,11 @@ def cw(Time):
 #     plt.show()
 #     return source
 
-def cosMod(qTime,maxTime, complex_signal):
+def cosMod(qTime,maxTime, complex_signal, f0):
     dt=1e-17
     sigma=2 * dt * maxTime / 100 # Width
     phase=0.0
-    f0 = 300
+    # f0 = 300
     # Time array
     t = qTime * dt
     t0 = 4 * dt * maxTime / 10  # Center time
