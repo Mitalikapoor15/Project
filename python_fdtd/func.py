@@ -13,16 +13,41 @@ def cw(Time):
     imp0 = 377
     return np.exp(-(Time - 30.) * (Time - 30.) / 100000000.) /imp0
 
-def cosMod(qTime, maxTime):
-    dt = 10e-17  # Time step (s) //added
+
+
+# def cosMod(qTime, maxTime):
+#     dt = 10e-17  # Time step (s) //added
+#     t = qTime * dt
+#     A = 1
+#     f0 = 300e12
+#     t0 = 4 * dt * maxTime / 50  # Center time
+#     tau = 2 * dt * maxTime / 50 # Width
+#     source = A * np.cos(2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
+#     # source = A * np.exp( 1j* 2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
+    
+#     plt.plot(np.abs(source))
+#     plt.show()
+#     return source
+
+def cosMod(qTime,maxTime, complex_signal):
+    dt=1e-17
+    sigma=2 * dt * maxTime / 100 # Width
+    phase=0.0
+    f0 = 300
+    # Time array
     t = qTime * dt
-    A = 1
-    f0 = 300e12
-    t0 = 4 * dt * maxTime / 50  # Center time
-    tau = 2 * dt * maxTime / 50 # Width
-    # source = A * np.cos(2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
-    source = A * np.cos( 1j* 2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
-    return source
+    t0 = 4 * dt * maxTime / 10  # Center time
+    
+    # Gaussian envelope
+    g = np.exp(-0.5 * ((t - t0) / sigma)**2)
+    
+    # Signal
+    if complex_signal:
+        signal = g * np.exp(1j * (2 * np.pi * f0 * t + phase))
+    else:
+        signal = g * np.cos(2 * np.pi * f0 * t + phase)
+    
+    return signal
 
 def create_colored_arc(center, radius, values, angle_range, cmap='plasma'):
     """
