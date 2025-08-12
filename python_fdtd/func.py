@@ -15,20 +15,6 @@ def cw(Time):
 
 
 
-# def cosMod(qTime, maxTime):
-#     dt = 10e-17  # Time step (s) //added
-#     t = qTime * dt
-#     A = 1
-#     f0 = 300e12
-#     t0 = 4 * dt * maxTime / 50  # Center time
-#     tau = 2 * dt * maxTime / 50 # Width
-#     source = A * np.cos(2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
-#     # source = A * np.exp( 1j* 2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
-    
-#     plt.plot(np.abs(source))
-#     plt.show()
-#     return source
-
 def cosMod(qTime,maxTime, complex_signal, f0):
     dt=1e-17
     sigma=2 * dt * maxTime / 100 # Width
