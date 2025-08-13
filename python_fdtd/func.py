@@ -55,8 +55,8 @@ def create_colored_arc(center, radius, values, angle_range, cmap='plasma'):
 
     return LineCollection(segments, colors=colors, linewidths=14), x, y
 
-def plot_field_ring(ez_tab_tp):
-    num_rings = 1  # Number of full rings in the middle
+def plot_field_ring(ez_tab_tp, N_rings):
+    num_rings = N_rings - 2  # Number of full rings in the middle (will be 2 less than the total number of rings as they will act as i/p and o/p)
     N_seg = ez_tab_tp.shape[0]
     print(N_seg)
     
