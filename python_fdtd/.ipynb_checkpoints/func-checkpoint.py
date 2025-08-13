@@ -13,16 +13,27 @@ def cw(Time):
     imp0 = 377
     return np.exp(-(Time - 30.) * (Time - 30.) / 100000000.) /imp0
 
-def cosMod(qTime, maxTime):
-    dt = 10e-17  # Time step (s) //added
+
+
+def cosMod(qTime,maxTime, complex_signal, f0, sigma):
+    dt=1e-16
+    # sigma= 10e-15 # Width
+    phase=0.0
+    # f0 = 300
+    # Time array
     t = qTime * dt
-    A = 1
-    f0 = 300e12
-    t0 = 4 * dt * maxTime / 50  # Center time
-    tau = 2 * dt * maxTime / 50 # Width
-    source = A * np.cos(2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
-    source = A * np.exp( 1j* 2 * np.pi * f0 * (t - t0)) * np.exp(-((t - t0)**2) / (tau**2))
-    return source
+    t0 = 4 * sigma  # Center time
+    
+    # Gaussian envelope
+    g = np.exp(-0.5 * ((t - t0) / sigma)**2)
+    
+    # Signal
+    if complex_signal:
+        signal = g * np.exp(1j * (2 * np.pi * f0 * t + phase))
+    else:
+        signal = g * np.cos(2 * np.pi * f0 * t + phase)
+    
+    return signal
 
 def create_colored_arc(center, radius, values, angle_range, cmap='plasma'):
     """
@@ -44,14 +55,14 @@ def create_colored_arc(center, radius, values, angle_range, cmap='plasma'):
 
     return LineCollection(segments, colors=colors, linewidths=14), x, y
 
-def plot_field_ring(ez_tab_tp):
-    num_rings = 1  # Number of full rings in the middle
+def plot_field_ring(ez_tab_tp, N_rings):
+    num_rings = N_rings - 2  # Number of full rings in the middle (will be 2 less than the total number of rings as they will act as i/p and o/p)
     N_seg = ez_tab_tp.shape[0]
     print(N_seg)
     
     radius = 1.0
     spacing = 2.3  # spacing between ring centers
-    cmap = 'plasma'
+    cmap = 'Reds'
 
     fig, ax = plt.subplots(figsize=(12, 4))
     all_x = []
@@ -93,3 +104,39 @@ def plot_field_ring(ez_tab_tp):
     plt.title(f'{num_rings} Coupled Optical Rings with Half Arcs at Ends')
     plt.tight_layout()
     plt.show()
+
+
+
+def Sources(N_rings):
+    seg_no = N_rings*2
+    s = np.zeros((seg_no,2), dtype=int)
+    s1 = np.zeros((N_rings,2), dtype=int) #forward transmission
+    s2 = np.zeros((N_rings,2), dtype=int) #backward propagation
+    s1[0][1] = -1
+    s1[0][0] = -1
+    for i in range (N_rings):
+        if i > 0:
+            s1[i][0] = (2*i + 1)  #odd indices belong to the s2 segments which are responsible for back propagation
+            s1[i][1] = 2*i - 2 #because if it is 0, we will have -2 index which is not what we want.
+        
+        s2[i][0] = 2*i  #for the transmission of odd segments  
+        s2[i][1] = 2*i  + 3
+        if i==(N_rings-1):
+            s2[i][1] =  2*i - 1
+        
+    for i in range(N_rings):
+        s[2*i][0] = s1[i][0]
+        s[2*i][1] = s1[i][1]
+        s[2*i + 1][:] = s2[i][:]
+
+    s[2*N_rings-1][0] = -2 
+    s[2*N_rings-1][1] = -2 
+    return s
+
+def Couplings(N_rings, tau):
+    c = np.zeros((N_rings*2,2), dtype=complex)
+    t = tau
+    k = 1j* m.sqrt(1-t**2)
+    c[:][:] = (t,k)
+    return c
+    

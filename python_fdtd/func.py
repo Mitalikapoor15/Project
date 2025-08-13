@@ -15,14 +15,14 @@ def cw(Time):
 
 
 
-def cosMod(qTime,maxTime, complex_signal, f0):
-    dt=1e-17
-    sigma=2 * dt * maxTime / 100 # Width
+def cosMod(qTime,maxTime, complex_signal, f0, sigma):
+    dt=1e-16
+    # sigma= 10e-15 # Width
     phase=0.0
     # f0 = 300
     # Time array
     t = qTime * dt
-    t0 = 4 * dt * maxTime / 10  # Center time
+    t0 = 4 * sigma  # Center time
     
     # Gaussian envelope
     g = np.exp(-0.5 * ((t - t0) / sigma)**2)
@@ -129,6 +129,8 @@ def Sources(N_rings):
         s[2*i][1] = s1[i][1]
         s[2*i + 1][:] = s2[i][:]
 
+    s[2*N_rings-1][0] = -2 
+    s[2*N_rings-1][1] = -2 
     return s
 
 def Couplings(N_rings, tau):
