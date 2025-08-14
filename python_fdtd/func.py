@@ -80,19 +80,32 @@ def plot_field_ring(ez_tab_tp, N_rings):
     # Full rings
     for i in range(num_rings):
         center = ((i + 1) * spacing, 0)
-        values = np.real(np.hstack((ez_tab_tp[2*(i+1),:], ez_tab_tp[2*(i+1)+1,:])))
-        arc, x, y = create_colored_arc(center, radius, values, (0, 2*np.pi), cmap)
+        if i%2 == 0:
+        # values = np.real(np.hstack((ez_tab_tp[2*(i+1),:], ez_tab_tp[2*(i+1)+1,:])))
+        # arc, x, y = create_colored_arc(center, radius, values, (0, 2*np.pi), cmap)
+        # arc, x, y = create_colored_arc(center, radius, values, (2*np.pi,0), cmap)
+            arc, x, y = create_colored_arc(center, radius, values, (0*np.pi, 2*np.pi), cmap)
+        else:
+            arc, x, y = create_colored_arc(center, radius, values, (-1*np.pi, 1*np.pi), cmap)
+
         ax.add_collection(arc)
         all_x.extend(x)
         all_y.extend(y)
 
     # Right half-ring (end)
     center = ((num_rings + 1) * spacing, 0)
-    values = np.real( np.hstack((ez_tab_tp[N_seg-2,:], ez_tab_tp[N_seg-1,:])) )
-    arc, x, y = create_colored_arc(center, radius, values,(np.pi/2, 3*np.pi/2) , cmap)
+    if num_rings%2 == 0: #even no of rings in the middle
+        values = np.real( np.hstack((ez_tab_tp[N_seg-2,:], ez_tab_tp[N_seg-1,:])) )
+        arc, x, y = create_colored_arc(center, radius, values,(1*np.pi/2, 3*np.pi/2) , cmap)
+    else:
+        values = np.real( np.hstack((ez_tab_tp[N_seg-1,:], ez_tab_tp[N_seg-2,:])) )
+        arc, x, y = create_colored_arc(center, radius, values,(3*np.pi/2, 1*np.pi/2) , cmap)
+        
     ax.add_collection(arc)
     all_x.extend(x)
     all_y.extend(y)
+    
+    #need to fix the last (right) port for even number of rings in the middle.
 
     # Set axis limits based on all arc coordinates
     margin = 0.5
@@ -104,6 +117,86 @@ def plot_field_ring(ez_tab_tp, N_rings):
     plt.title(f'{num_rings} Coupled Optical Rings with Half Arcs at Ends')
     plt.tight_layout()
     plt.show()
+
+# def plot_field_ring(ez_tab_tp, N_rings):
+#     num_rings = N_rings - 2  # Middle full rings
+#     N_seg = ez_tab_tp.shape[0]
+#     print(N_seg)
+    
+#     radius = 1.0
+#     spacing = 2.3
+#     cmap = 'Reds'
+
+#     fig, ax = plt.subplots(figsize=(12, 4))
+#     all_x, all_y = [], []
+
+#     # --- Left half-ring (start) ---
+#     center = (0, 0)
+#     values = np.real(np.hstack((ez_tab_tp[0, :], ez_tab_tp[1, :])))
+#     # First half arc direction = first ring's direction (CCW)
+#     arc, x, y = create_colored_arc(center, radius, values, (-np.pi/2, np.pi/2), cmap)
+#     ax.add_collection(arc)
+#     all_x.extend(x)
+#     all_y.extend(y)
+
+#     # --- Full rings with alternating directions ---
+#     BOTTOM_CCW = True  # First ring's direction
+#     for i in range(num_rings):
+#         center = ((i + 1) * spacing, 0)
+
+#         if BOTTOM_CCW:
+#             start_angle, end_angle = np.pi/2, 3*np.pi/2  # CCW
+#         else:
+#             start_angle, end_angle = 3*np.pi/2, np.pi/2  # CW
+
+#         # Bottom arc
+#         values_bottom = np.real(np.hstack((
+#             ez_tab_tp[2*(i+1), :],
+#             ez_tab_tp[2*(i+1)+1, :]
+#         )))
+#         arc_bottom, x_b, y_b = create_colored_arc(center, radius, values_bottom,
+#                                                   (start_angle, end_angle), cmap)
+#         ax.add_collection(arc_bottom)
+#         all_x.extend(x_b)
+#         all_y.extend(y_b)
+
+#         # Top arc (same direction as bottom)
+#         values_top = np.real(np.hstack((
+#             ez_tab_tp[2*(i+1), :],
+#             ez_tab_tp[2*(i+1)+1, :]
+#         )))
+#         arc_top, x_t, y_t = create_colored_arc(center, radius, values_top,
+#                                                (start_angle, end_angle), cmap)
+#         ax.add_collection(arc_top)
+#         all_x.extend(x_t)
+#         all_y.extend(y_t)
+
+#         # Alternate direction for next ring
+#         BOTTOM_CCW = not BOTTOM_CCW
+
+#     # --- Right half-ring (end) ---
+#     center = ((num_rings + 1) * spacing, 0)
+#     values = np.real(np.hstack((ez_tab_tp[N_seg-2, :], ez_tab_tp[N_seg-1, :])))
+#     if BOTTOM_CCW:
+#         arc, x, y = create_colored_arc(center, radius, values, (-np.pi/2, np.pi/2), cmap)
+#     else:
+#         arc, x, y = create_colored_arc(center, radius, values, (np.pi/2, -np.pi/2), cmap)
+#     ax.add_collection(arc)
+#     all_x.extend(x)
+#     all_y.extend(y)
+
+#     # --- Final plot settings ---
+#     margin = 0.5
+#     ax.set_xlim(min(all_x) - margin, max(all_x) + margin)
+#     ax.set_ylim(min(all_y) - margin, max(all_y) + margin)
+#     ax.set_aspect('equal')
+#     ax.axis('off')
+
+#     plt.title(f'{num_rings} Coupled Optical Rings with Alternating Arc Directions')
+#     plt.tight_layout()
+#     plt.show()
+
+
 
 
 
