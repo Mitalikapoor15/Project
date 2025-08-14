@@ -151,3 +151,16 @@ def Couplings(N_rings, tau):
     c[:][:] = (t,k)
     return c
     
+def SSH_Couplings(N_rings, tau_alt):
+    c = np.zeros((N_rings*2,2), dtype=complex)
+    
+    t = tau_alt
+    k = np.zeros(len(t), dtype=complex)
+    for i in range(len(t)):
+        k[i] = 1j* m.sqrt(1-t[i]**2)
+    for i in range(N_rings*2):
+        if i%2 == 0:
+            c[i][:] = (t[0],k[0])
+        else:
+            c[i][:] = (t[1],k[1])
+    return c
