@@ -15,8 +15,8 @@ def cw(Time):
 
 
 
-def cosMod(qTime,maxTime, complex_signal, f0, sigma):
-    dt=1e-16
+def cosMod(qTime, complex_signal, f0, sigma, del_t):
+    dt=del_t
     # sigma= 10e-15 # Width
     phase=0.0
     # f0 = 300
