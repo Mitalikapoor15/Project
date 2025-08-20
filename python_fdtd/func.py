@@ -13,6 +13,17 @@ def cw(Time):
     imp0 = 377
     return np.exp(-(Time - 30.) * (Time - 30.) / 100000000.) /imp0
 
+def cw2(qTime, del_t, f0):
+    
+    f = f0 #resonant frequency (only frequency in this case)
+    t = qTime * del_t
+    A = 1.0 #amplitude
+
+    phi0 = 0 #phase if required
+    # s = A*np.sin(2*np.pi*f*t*dt + phi0)
+    s_complex = A*np.sin(2.0*np.pi*f0*t + phi0)
+    return s_complex
+
 
 
 def cosMod(qTime, complex_signal, f0, sigma, del_t):
