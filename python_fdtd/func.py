@@ -24,7 +24,49 @@ def cw2(qTime, del_t, f0):
     s_complex = A*np.sin(2.0*np.pi*f0*t + phi0)
     return s_complex
 
+#Finding the resonant frequency of the CROW hoping for it to be around the resonant frequency of the single ring resonator (on-site frequency)
+#We want to do this so that the system can be driven at the zero mode frequency and topological states can be accessed.
 
+def zero_mode_freq(E, dt, f_ref, search_bw = 5e12): 
+    #f_ref is the resonant frequency of the single ring around which the res freq of the CROW should land.
+    
+    N = len(E)
+    t = np.arange(N) * dt
+    
+    start = int(0.30 * N) #using the last 70 percent of the signal so that steady state is reached.
+    Eg = np.asarray(E[start:], dtype = np.complex128)
+    Ng = len(Eg)
+    w = np.hanning(Ng)
+    
+    #demodulating the baseband
+    t_g = t[start:]
+    Ebb = Eg * np.exp(-1j*2*np.pi*f_ref*t_g)
+    
+    #Taking the fft in detuned coordinates
+    F = np.fft.fftshift(np.fft.fft(Ebb * w))
+    freqs = np.fft.fftshift(np.fft.fftfreq(Ng, d=dt))
+    detuning = freqs - f_ref
+    mag = np.abs(F)
+    
+    
+    #Searching for the frequency closest to f_ref i.e. close to zero detuning
+    win = np.where(np.abs(detuning) <= search_bw)[0]
+    k = win[np.argmax(max(win))]  #index of max in the window
+    #quadratic interpolation around (k-1, k, k+1)
+    if 0 < k < len(mag)-1:
+        y1, y2, y3 = mag[k-1], mag[k], mag[k+1]
+        denom = (y1 - 2*y2 + y3)
+        delta = 0.5*(y1-y3)/denom if denom != 0 else 0.0
+    else:
+        delta = 0.0
+    
+    df = freqs[1] - freqs[0]
+    detuning_peak = detuning[k] + delta*df
+    f_zero = f_ref + detuning_peak
+    df_fft = 1.0 /(Ng *dt)
+    
+    return f_zero, df_fft, detuning, mag
+    
 
 def cosMod(qTime, complex_signal, f0, sigma, del_t):
     dt=del_t
