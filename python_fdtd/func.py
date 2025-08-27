@@ -5,13 +5,15 @@ from matplotlib import colormaps
 from scipy.fft import fft, ifft, fftfreq
 import math as m
 
-def gaussian(qTime):
+def gaussian(qTime, maxTime):
     imp0 = 377
-    return np.exp(-(qTime - 30.) * (qTime - 30.) / 100.) /imp0
+    start = int(0.20 * maxTime) # to start after 20% of the main signal 
+    return np.exp(-(qTime - start) * (qTime - start)/ 10000.) /imp0
 
-def cw(Time):
+def cw(qTime):
     imp0 = 377
-    return np.exp(-(Time - 30.) * (Time - 30.) / 100000000.) /imp0
+    start = 30
+    return np.exp(-(qTime - start) * (qTime - start) / 100000000.) /imp0
 
 def cw2(qTime, del_t, f0):
     
