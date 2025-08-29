@@ -70,9 +70,10 @@ def zero_mode_freq(E, dt, f_ref, search_bw = 5e12):
     return f_zero, df_fft, detuning, mag
     
 
-def cosMod(qTime, complex_signal, f0, sigma, del_t):
+def cosMod(qTime, complex_signal, f0, del_t):
     dt=del_t
-    # sigma= 10e-15 # Width
+    f0 = f0
+    sigma= 10e-15 # Width
     phase=0.0
     # f0 = 300
     # Time array
@@ -172,6 +173,111 @@ def plot_field_ring(ez_tab_tp, N_rings):
     plt.title(f'{num_rings} Coupled Optical Rings with Half Arcs at Ends')
     plt.tight_layout()
     plt.show()
+    
+def create_colored_arc_1(center, radius, values, angle_range, cmap='plasma', linewidth=14):
+    """
+    Create a LineCollection for an arc. `values` should be length N (number of segments).
+    angle_range is (start, end) in radians.
+    Returns (LineCollection, x_coords, y_coords)
+    """
+    N = len(values)
+    # We want N segments -> N+1 theta sample points
+    theta = np.linspace(angle_range[0], angle_range[1], N + 1)
+    x = center[0] + radius * np.cos(theta)
+    y = center[1] + radius * np.sin(theta)
+    segments = np.array([[[x[i], y[i]], [x[i+1], y[i+1]]] for i in range(N)])
+    norm_values = (values - np.min(values)) / (np.ptp(values) + 1e-8)
+    colors = colormaps.get_cmap(cmap)(norm_values)
+    return LineCollection(segments, colors=colors, linewidths=linewidth), x, y
+
+def plot_field_ring_1(ez_tab_tp, N_rings, flip_alternate=True):
+    """
+    ez_tab_tp : ndarray with shape (N_rows, M) where each "row" holds samples along a segment
+                We assume 2 rows per ring and 2 rows for left/right ports as described above.
+    N_rings : total rings including the two port-positions (so num_full_rings = N_rings - 2)
+    flip_alternate : if True, reverse the ordering of values for odd-indexed rings to fix orientation
+    """
+    # number of full circular rings in the middle
+    num_rings = N_rings - 2
+    N_rows = ez_tab_tp.shape[0]
+
+    radius = 1.0
+    spacing = 2.3
+    cmap = 'Reds'
+    port_half_length = 2.0   # how far the vertical port extends above/below the ring
+    samples_per_segment = 100  # how many color segments to draw on each straight port
+
+    fig, ax = plt.subplots(figsize=(12, 4))
+    all_x, all_y = [], []
+
+    # --- Left vertical input port ---
+    first_center = (spacing, 0)   # center of first full ring (x = spacing)
+    x_port_pos = first_center[0] - radius  # x position tangent to left side of first ring
+    y_port = np.linspace(-port_half_length, port_half_length, samples_per_segment)
+    x_port = np.full_like(y_port, x_port_pos)
+
+    # Grab left port values from ez_tab_tp rows 0 and 1 (concatenate along the spatial sample axis)
+    left_values = np.real(np.hstack((ez_tab_tp[0, :], ez_tab_tp[1, :])))
+    # create per-segment values equal in length to number of port segments (samples_per_segment-1)
+    port_vals = np.linspace(left_values[0], left_values[-1], samples_per_segment-1)
+    port_segments = [[[x_port[i], y_port[i]], [x_port[i+1], y_port[i+1]]] 
+                     for i in range(len(y_port)-1)]
+    norm_vals = (port_vals - np.min(port_vals)) / (np.ptp(port_vals) + 1e-8)
+    port_colors = colormaps.get_cmap(cmap)(norm_vals)
+    ax.add_collection(LineCollection(port_segments, colors=port_colors, linewidths=14))
+    all_x.extend(x_port.tolist())
+    all_y.extend(y_port.tolist())
+
+    # --- Full rings in middle ---
+    # We assume row indices for ring k (k from 0..num_rings-1) are: 2*(k+1), 2*(k+1)+1
+    for k in range(num_rings):
+        center = ((k + 1) * spacing, 0)
+        idx0 = 2 * (k + 1)
+        idx1 = idx0 + 1
+        # Guard against indexing errors
+        if idx1 >= N_rows:
+            raise IndexError(f"ez_tab_tp does not have expected rows for ring {k}: idx1={idx1} >= N_rows={N_rows}")
+
+        # Concatenate the two rows to form one circular sampling vector
+        values = np.real(np.hstack((ez_tab_tp[idx0, :], ez_tab_tp[idx1, :])))
+        # Optionally flip alternate rings to ensure consistent direction around ring
+        if flip_alternate and (k % 2 == 1):
+            values = values[::-1]
+
+        # Choose an angle range of 0..2pi; ensure number of values == desired N segments
+        arc, x, y = create_colored_arc_1(center, radius, values, (0.0, 2*np.pi), cmap=cmap)
+        ax.add_collection(arc)
+        all_x.extend(x.tolist())
+        all_y.extend(y.tolist())
+
+    # --- Right vertical output port ---
+    last_center = (num_rings * spacing, 0)   # center of last full ring
+    x_port_pos = last_center[0] + radius
+    y_port = np.linspace(-port_half_length, port_half_length, samples_per_segment)
+    x_port = np.full_like(y_port, x_port_pos)
+
+    # Grab right port values from last two rows
+    right_values = np.real(np.hstack((ez_tab_tp[N_rows-2, :], ez_tab_tp[N_rows-1, :])))
+    port_vals = np.linspace(right_values[0], right_values[-1], samples_per_segment-1)
+    port_segments = [[[x_port[i], y_port[i]], [x_port[i+1], y_port[i+1]]] 
+                     for i in range(len(y_port)-1)]
+    norm_vals = (port_vals - np.min(port_vals)) / (np.ptp(port_vals) + 1e-8)
+    port_colors = colormaps.get_cmap(cmap)(norm_vals)
+    ax.add_collection(LineCollection(port_segments, colors=port_colors, linewidths=14))
+    all_x.extend(x_port.tolist())
+    all_y.extend(y_port.tolist())
+
+    # Final view settings
+    margin = 0.5
+    ax.set_xlim(min(all_x) - margin, max(all_x) + margin)
+    ax.set_ylim(min(all_y) - margin, max(all_y) + margin)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    plt.title(f'{num_rings} Coupled Optical Rings with Vertical Tangential Ports')
+    plt.tight_layout()
+    plt.show()
+
+
 
 def Sources(N_rings):
     seg_no = N_rings*2
@@ -199,20 +305,56 @@ def Sources(N_rings):
     s[2*N_rings-1][1] = -2 
     return s
 
+def Sources1(N_rings):
+    seg_no = N_rings*2
+    s = np.zeros((seg_no,2), dtype=int)
+    s1 = np.zeros((N_rings,2), dtype=int) #forward transmission
+    s2 = np.zeros((N_rings,2), dtype=int) #backward propagation
+    s1[0][1] = -1
+    s1[0][0] = -1
+    for i in range (N_rings):
+        if i > 0:
+            s1[i][0] = (2*i + 1)  #odd indices belong to the s2 segments which are responsible for back propagation
+            s1[i][1] = 2*i - 2 #because if it is 0, we will have -2 index which is not what we want.
+        if i < N_rings - 1:
+            s2[i][0] = 2*i  #for the transmission of odd segments  
+            s2[i][1] = 2*i  + 3
+        # if i==(N_rings-1):
+        #     s2[i][1] =  2*i - 1
+        elif i == (N_rings -1):
+            s1[i][0] = -2 
+            s1[i][1] = -2 
+    for i in range(N_rings):
+        s[2*i][0] = s1[i][0]
+        s[2*i][1] = s1[i][1]
+        s[2*i + 1][:] = s2[i][:]
+
+  
+    return s
+
 def Couplings(N_rings, tau):
     c = np.zeros((N_rings*2,2), dtype=complex)
     t = tau
     k = 1j* m.sqrt(1-t**2)
     c[:][:] = (t,k)
     return c
-    
-def SSH_Couplings(N_rings, tau_alt):
+
+def Couplings_1(N_rings, kappa):
     c = np.zeros((N_rings*2,2), dtype=complex)
+    k = kappa
+    t = np.sqrt(1-np.abs(k)**2)
+    c[:][:] = (t,k)
+    return c
+
     
+def SSH_Couplings(N_rings, tau_alt, kappa_alt):
+    c = np.zeros((N_rings*2,2), dtype=complex)
+    #  k = np.zeros(len(t), dtype=complex)
     t = tau_alt
-    k = np.zeros(len(t), dtype=complex)
-    for i in range(len(t)):
-        k[i] = 1j* m.sqrt(1-t[i]**2)
+    k = kappa_alt
+   
+    # for i in range(len(t)):
+        # k[i] = 1j* m.sqrt(1-t[i]**2)
     for i in range(N_rings*2):
         if i%2 == 0:
             c[i][:] = (t[0],k[0])
