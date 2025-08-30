@@ -305,7 +305,7 @@ def Sources(N_rings):
     s[2*N_rings-1][1] = -2 
     return s
 
-def Sources1(N_rings):
+def Sources1(N_rings): #it pnly works for 13 rings for some reason (2 exlcuded for i/p and o/p))
     seg_no = N_rings*2
     s = np.zeros((seg_no,2), dtype=int)
     s1 = np.zeros((N_rings,2), dtype=int) #forward transmission
@@ -333,25 +333,40 @@ def Sources1(N_rings):
     return s
 
 def Couplings(N_rings, tau):
+    t = []
     c = np.zeros((N_rings*2,2), dtype=complex)
     t = tau
     k = 1j* m.sqrt(1-t**2)
-    c[:][:] = (t,k)
+    for i in range(N_rings):
+        if i == 0 or i == N_rings-1:
+            c[i][:] = (t[0],k[0])
+            c[i+1][:] = (t[0],k[0])
+        else:
+            c[i][:] = (t[1],k[1])
+            c[i+1][:] = (t[1],k[1])
     return c
 
 def Couplings_1(N_rings, kappa):
     c = np.zeros((N_rings*2,2), dtype=complex)
     k = kappa
     t = np.sqrt(1-np.abs(k)**2)
-    c[:][:] = (t,k)
+    for i in range(N_rings):
+        if i == 0 or i == N_rings-1:
+            c[2*i][:] = (t[0],k[0])
+            c[2*i+1][:] = (t[0],k[0])
+        else:
+            c[2*i][:] = (t[1],k[1])
+            c[2*i+1][:] = (t[1],k[1])
     return c
 
     
-def SSH_Couplings(N_rings, tau_alt, kappa_alt):
+def SSH_Couplings(N_rings, tau_alt, kappa_alt, kappa_guide, tau_guide):
     c = np.zeros((N_rings*2,2), dtype=complex)
     #  k = np.zeros(len(t), dtype=complex)
     t = tau_alt
     k = kappa_alt
+    k_g = kappa_guide
+    t_g = tau_guide
    
     # for i in range(len(t)):
         # k[i] = 1j* m.sqrt(1-t[i]**2)
@@ -360,4 +375,8 @@ def SSH_Couplings(N_rings, tau_alt, kappa_alt):
             c[i][:] = (t[0],k[0])
         else:
             c[i][:] = (t[1],k[1])
+    c[0,:] = (t_g,k_g) #coupling for the waveguide-resonator pair
+    c[1,:] = (t_g,k_g)
+    c[N_rings*2 -1,:] = (t_g,k_g)
+    c[N_rings*2 -2,:] = (t_g,k_g)
     return c
